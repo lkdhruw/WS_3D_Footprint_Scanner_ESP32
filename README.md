@@ -1,17 +1,17 @@
-# WS_Cone_Penetrometer_ESP32
+# WS_3D_Footprint_Scanner_ESP32
 
-ESP32-based WebSocket server (AP mode) that streams soil penetrometer sensor data at 1 Hz to connected clients. Includes a modular WebSocket library and an HTML test client.
+ESP32-based WebSocket server (AP mode) that streams 3D footprint scanner sensor data (X, Y, Depth) to connected clients. Includes a modular WebSocket library and an HTML test client.
 
 ---
 
 ## Project Structure
 
 ```
-WS_Cone_Penetrometer_ESP32/
-├── WS_Cone_Penetrometer_ESP32.ino  ← Main sketch (data & JSON defined here)
-├── ESP32_WS_Server.h               ← WebSocket library header
-├── ESP32_WS_Server.cpp             ← WebSocket library implementation
-├── index.html                      ← Browser-based test client
+WS_3D_Footprint_Scanner_ESP32/
+├── WS_3D_Footprint_Scanner_ESP32.ino ← Main sketch (data & JSON defined here)
+├── ESP32_WS_Server.h                 ← WebSocket library header
+├── ESP32_WS_Server.cpp               ← WebSocket library implementation
+├── index.html                        ← Browser-based test client
 └── .gitignore
 ```
 
@@ -96,8 +96,9 @@ wsServer.hasAuthenticatedClients();  // Returns true if at least one client is a
 ESP32_WS_Server wsServer(81);
 
 // Your data variables (modify as needed)
-float temperature = 25.0;
-float pressure    = 1013.0;
+float x = 0.0;
+float y = 0.0;
+float depth = 0.0;
 
 void setup() {
   Serial.begin(115200);
@@ -112,8 +113,9 @@ void loop() {
 
   if (wsServer.hasAuthenticatedClients()) {
     StaticJsonDocument<128> doc;
-    doc["temperature"] = temperature;
-    doc["pressure"]    = pressure;
+    doc["x"] = x;
+    doc["y"] = y;
+    doc["depth"] = depth;
     doc["timestamp"]   = millis();
 
     char buf[128];

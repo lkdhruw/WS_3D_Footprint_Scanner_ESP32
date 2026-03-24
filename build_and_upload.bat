@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 echo ====================================================================
-echo  ESP32 Auto Build and Upload Script for WS_Cone_Penetrometer_ESP32
+echo  ESP32 Auto Build and Upload Script for WS_3D_Footprint_Scanner_ESP32
 echo ====================================================================
 echo.
 
@@ -52,9 +52,6 @@ echo [2/3] Checking required libraries...
 
 call :CheckLib "WebSockets"
 call :CheckLib "ArduinoJson"
-call :CheckLib "SparkFun u-blox GNSS Arduino Library"
-call :CheckLib "HX711 Arduino Library"
-call :CheckLib "LiquidCrystal I2C"
 goto :Compile
 
 :CheckLib
@@ -71,7 +68,7 @@ exit /b
 :Compile
 echo.
 echo [3/3] Ready to compile!
-arduino-cli compile --fqbn esp32:esp32:esp32 WS_Cone_Penetrometer_ESP32.ino
+arduino-cli compile --fqbn esp32:esp32:esp32 WS_3D_Footprint_Scanner_ESP32.ino
 if %errorlevel% neq 0 (
     echo.
     echo [ERROR] Compilation failed! See logs above.
@@ -115,7 +112,7 @@ if "!COMPORT!"=="" (
     echo.
     echo Uploading to %COMPORT%...
     echo Remember: You may need to hold the BOOT button on the ESP32 while it connects
-    arduino-cli upload --fqbn esp32:esp32:esp32 --port %COMPORT% WS_Cone_Penetrometer_ESP32.ino
+    arduino-cli upload --fqbn esp32:esp32:esp32 --port %COMPORT% WS_3D_Footprint_Scanner_ESP32.ino
     if !errorlevel! neq 0 (
         echo.
         echo [ERROR] Upload failed!

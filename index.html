@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WS Cone Penetrometer Tester</title>
+    <title>3D Footprint Scanner</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -130,7 +130,7 @@
 </head>
 <body>
 
-    <h1>Cone Penetrometer Tester</h1>
+    <h1>3D Footprint Scanner</h1>
 
     <div class="panel">
         <div class="controls">
@@ -147,28 +147,16 @@
         <h2>Live Sensor Data</h2>
         <div class="data-grid">
             <div class="data-card">
-                <h3>Depth (cm)</h3>
+                <h3>X Coordinate</h3>
+                <div class="value" id="val-x">--</div>
+            </div>
+            <div class="data-card">
+                <h3>Y Coordinate</h3>
+                <div class="value" id="val-y">--</div>
+            </div>
+            <div class="data-card">
+                <h3>Depth (mm)</h3>
                 <div class="value" id="val-depth">--</div>
-            </div>
-            <div class="data-card">
-                <h3>Load (kg)</h3>
-                <div class="value" id="val-load">--</div>
-            </div>
-            <div class="data-card">
-                <h3>GNSS Latitude</h3>
-                <div class="value" id="val-lat">--</div>
-            </div>
-            <div class="data-card">
-                <h3>GNSS Longitude</h3>
-                <div class="value" id="val-lon">--</div>
-            </div>
-            <div class="data-card">
-                <h3>Battery Voltage</h3>
-                <div class="value" id="val-battv">--</div>
-            </div>
-            <div class="data-card">
-                <h3>Battery %</h3>
-                <div class="value" id="val-battp">--</div>
             </div>
             <div class="data-card grid-item-wide">
                 <h3>Timestamp (ms)</h3>
@@ -256,12 +244,9 @@
                         }
 
                         // Update dashboard values if telemetry data
+                        if (data.x !== undefined) document.getElementById('val-x').textContent = data.x;
+                        if (data.y !== undefined) document.getElementById('val-y').textContent = data.y;
                         if (data.depth !== undefined) document.getElementById('val-depth').textContent = data.depth;
-                        if (data.load !== undefined) document.getElementById('val-load').textContent = data.load;
-                        if (data.latitude !== undefined) document.getElementById('val-lat').textContent = data.latitude;
-                        if (data.longitude !== undefined) document.getElementById('val-lon').textContent = data.longitude;
-                        if (data.batt_v !== undefined) document.getElementById('val-battv').textContent = data.batt_v + ' V';
-                        if (data.batt_pct !== undefined) document.getElementById('val-battp').textContent = data.batt_pct + '%';
                         if (data.timestamp !== undefined) document.getElementById('val-time').textContent = data.timestamp;
 
                     } catch (err) {
