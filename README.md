@@ -39,7 +39,7 @@ It does **not** define what data is sent. That is fully controlled by your main 
 
 ### Constructor
 ```cpp
-ESP32_WS_Server wsServer(81);   // port number, default: 81
+ESP32_WS_Server wsServer(82);   // port number, default: 82
 ```
 
 ### Configuration (call before `begin()`)
@@ -93,7 +93,7 @@ wsServer.hasAuthenticatedClients();  // Returns true if at least one client is a
 #include <ArduinoJson.h>
 #include "ESP32_WS_Server.h"
 
-ESP32_WS_Server wsServer(81);
+ESP32_WS_Server wsServer(82);
 
 // Your data variables (modify as needed)
 float x = 0.0;
@@ -140,7 +140,7 @@ Install via Arduino Library Manager:
 
 After connecting to the ESP32's WiFi AP:
 ```
-ws://192.168.4.1:81
+ws://192.168.4.1:82
 ```
 
 ---
