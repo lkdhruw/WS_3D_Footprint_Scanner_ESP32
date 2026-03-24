@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WS Cone Penetrometer Tester</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .panel {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .status.disconnected { background-color: #e74c3c; color: white; }
+        .status.connected { background-color: #2ecc71; color: white; }
+        .status.connecting { background-color: #f39c12; color: white; }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .data-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .data-card h3 {
+            margin-top: 0;
+            color: #7f8c8d;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .data-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        #log {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            border-bottom: 1px solid #34495e;
+            padding-bottom: 2px;
+        }
+
+        .log-time {
+            color: #f39c12;
+            margin-right: 10px;
+        }
+
+        .grid-item-wide {
+            grid-column: 1 / -1;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Cone Penetrometer Tester</h1>
+
+    <div class="panel">
+        <div class="controls">
+            <input type="text" id="wsUrl" value="ws://192.168.4.1:81" placeholder="WebSocket URL" style="flex-grow: 1;">
+            <input type="password" id="secretCode" value="123456" placeholder="Secret Code">
+            <button id="btnConnect">Connect</button>
+            <button id="btnAuth" disabled>Send Auth</button>
+            <button id="btnDisconnect" disabled>Disconnect</button>
+            <span id="connectionStatus" class="status disconnected">Disconnected</span>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Live Sensor Data</h2>
+        <div class="data-grid">
+            <div class="data-card">
+                <h3>Depth (cm)</h3>
+                <div class="value" id="val-depth">--</div>
+            </div>
+            <div class="data-card">
+                <h3>Load (kg)</h3>
+                <div class="value" id="val-load">--</div>
+            </div>
+            <div class="data-card">
+                <h3>GNSS Latitude</h3>
+                <div class="value" id="val-lat">--</div>
+            </div>
+            <div class="data-card">
+                <h3>GNSS Longitude</h3>
+                <div class="value" id="val-lon">--</div>
+            </div>
+            <div class="data-card">
+                <h3>Battery Voltage</h3>
+                <div class="value" id="val-battv">--</div>
+            </div>
+            <div class="data-card">
+                <h3>Battery %</h3>
+                <div class="value" id="val-battp">--</div>
+            </div>
+            <div class="data-card grid-item-wide">
+                <h3>Timestamp (ms)</h3>
+                <div class="value" id="val-time" style="font-size: 16px;">--</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Raw Log</h2>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        let ws;
+        const btnConnect = document.getElementById('btnConnect');
+        const btnAuth = document.getElementById('btnAuth');
+        const btnDisconnect = document.getElementById('btnDisconnect');
+        const wsUrl = document.getElementById('wsUrl');
+        const secretCode = document.getElementById('secretCode');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const logPanel = document.getElementById('log');
+
+        function addLog(msg) {
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">[${time}]</span> ${msg}`;
+            logPanel.prepend(entry);
+        }
+
+        function updateStatus(state) {
+            connectionStatus.textContent = state;
+            connectionStatus.className = `status ${state.toLowerCase()}`;
+            
+            if (state === 'Connected') {
+                btnConnect.disabled = true;
+                btnAuth.disabled = false;
+                btnDisconnect.disabled = false;
+                wsUrl.disabled = true;
+            } else if (state === 'Disconnected') {
+                btnConnect.disabled = false;
+                btnAuth.disabled = true;
+                btnDisconnect.disabled = true;
+                wsUrl.disabled = false;
+                
+                // Reset values
+                document.querySelectorAll('.value').forEach(el => el.textContent = '--');
+            } else if (state === 'Connecting') {
+                btnConnect.disabled = true;
+                wsUrl.disabled = true;
+            }
+        }
+
+        btnConnect.addEventListener('click', () => {
+            const url = wsUrl.value.trim();
+            if (!url) return alert('Please enter a WebSocket URL');
+
+            updateStatus('Connecting');
+            addLog(`Attempting to connect to ${url}...`);
+
+            try {
+                ws = new WebSocket(url);
+
+                ws.onopen = (e) => {
+                    addLog("WebSocket link established. Awaiting authentication...");
+                    updateStatus('Connected');
+                };
+
+                ws.onmessage = (e) => {
+                    addLog(`RECV: ${e.data}`);
+                    try {
+                        const data = JSON.parse(e.data);
+                        
+                        // Check if it's the auth success message
+                        if (data.status === "connected") {
+                            addLog("🟢 Authentication successful! Waiting for telemetry...");
+                            return;
+                        }
+
+                        // Check if it's an error message
+                        if (data.error) {
+                            addLog(`🔴 Error: ${data.error}`);
+                            return;
+                        }
+
+                        // Update dashboard values if telemetry data
+                        if (data.depth !== undefined) document.getElementById('val-depth').textContent = data.depth;
+                        if (data.load !== undefined) document.getElementById('val-load').textContent = data.load;
+                        if (data.latitude !== undefined) document.getElementById('val-lat').textContent = data.latitude;
+                        if (data.longitude !== undefined) document.getElementById('val-lon').textContent = data.longitude;
+                        if (data.batt_v !== undefined) document.getElementById('val-battv').textContent = data.batt_v + ' V';
+                        if (data.batt_pct !== undefined) document.getElementById('val-battp').textContent = data.batt_pct + '%';
+                        if (data.timestamp !== undefined) document.getElementById('val-time').textContent = data.timestamp;
+
+                    } catch (err) {
+                        console.error('Failed to parse JSON', err);
+                    }
+                };
+
+                ws.onclose = (e) => {
+                    addLog(`WebSocket closed (Code: ${e.code}).`);
+                    updateStatus('Disconnected');
+                };
+
+                ws.onerror = (err) => {
+                    addLog('WebSocket error occurred. (Might be offline)');
+                    updateStatus('Disconnected');
+                };
+
+            } catch (err) {
+                addLog(`Failed to construct WebSocket: ${err.message}`);
+                updateStatus('Disconnected');
+            }
+        });
+
+        btnAuth.addEventListener('click', () => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                const secret = secretCode.value;
+                const payload = JSON.stringify({ secret: secret });
+                ws.send(payload);
+                addLog(`SENT Auth Payload: ${payload}`);
+            } else {
+                addLog("Cannot send auth: WebSocket is not open.");
+            }
+        });
+
+        btnDisconnect.addEventListener('click', () => {
+             addLog("Closing connection manually...");
+             if (ws) ws.close();
+        });
+
+    </script>
+</body>
+</html>
