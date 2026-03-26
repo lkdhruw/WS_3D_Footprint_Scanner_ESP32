@@ -74,7 +74,7 @@ ESP32_WS_Server wsServer(82);
 
 
 // ── State Machine ────────────────────────────────────────────
-enum State { IDLE, PREPARING, DESCENDING, PAUSED, ASCENDING };
+enum State { IDLE, PREPARING, DESCENDING, PAUSED, ASCENDING, DEMO };
 State state = IDLE;
 
 // ── Live sensor values ───────────────────────────────────────
@@ -85,6 +85,7 @@ float depth_mm = 0.0; // from laser range sensor (mm)
 // ── Timing ───────────────────────────────────────────────────
 unsigned long lastBroadcastMs = 0;
 unsigned long pauseStartMs = 0;
+unsigned long lastDemoStepMs = 0;
 
 // Button edge-detection state
 bool prevBtnStart = HIGH;
@@ -215,6 +216,11 @@ void onWsMessage(uint8_t clientId, const char *message) {
       motorRpm = newRpm;
       Serial.printf("[CMD] Motor RPM set to %.1f\n", motorRpm);
     }
+  } else if (strcmp(cmd, "demo") == 0) {
+    Serial.println("[CMD] WS demo received");
+    state = DEMO;
+    x = 0.0;
+    y = 0.0;
   }
 }
 
@@ -274,6 +280,26 @@ void runStateMachine() {
       }
     }
     break;
+
+  case DEMO: {
+    unsigned long now = millis();
+    if (now - lastDemoStepMs >= 50) { // Increment every 50ms for demo
+      lastDemoStepMs = now;
+      y += 10.0;
+      if (y > 1000.0) {
+        y = 0.0;
+        x += 10.0;
+      }
+      if (x > 1000.0) {
+        Serial.println("[STATE] Demo finished → IDLE");
+        state = IDLE;
+        x = 0.0;
+        y = 0.0;
+      }
+      broadcastPayload();
+    }
+    break;
+  }
   }
 }
 

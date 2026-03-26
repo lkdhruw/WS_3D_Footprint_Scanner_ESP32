@@ -138,6 +138,8 @@
             <input type="password" id="secretCode" value="123456" placeholder="Secret Code">
             <button id="btnConnect">Connect</button>
             <button id="btnAuth" disabled>Send Auth</button>
+            <button id="btnDemo" disabled>Start Demo</button>
+            <button id="btnStop" disabled>Stop Scan</button>
             <button id="btnDisconnect" disabled>Disconnect</button>
             <span id="connectionStatus" class="status disconnected">Disconnected</span>
         </div>
@@ -174,6 +176,8 @@
         let ws;
         const btnConnect = document.getElementById('btnConnect');
         const btnAuth = document.getElementById('btnAuth');
+        const btnDemo = document.getElementById('btnDemo');
+        const btnStop = document.getElementById('btnStop');
         const btnDisconnect = document.getElementById('btnDisconnect');
         const wsUrl = document.getElementById('wsUrl');
         const secretCode = document.getElementById('secretCode');
@@ -195,11 +199,15 @@
             if (state === 'Connected') {
                 btnConnect.disabled = true;
                 btnAuth.disabled = false;
+                btnDemo.disabled = false;
+                btnStop.disabled = false;
                 btnDisconnect.disabled = false;
                 wsUrl.disabled = true;
             } else if (state === 'Disconnected') {
                 btnConnect.disabled = false;
                 btnAuth.disabled = true;
+                btnDemo.disabled = true;
+                btnStop.disabled = true;
                 btnDisconnect.disabled = true;
                 wsUrl.disabled = false;
                 
@@ -284,6 +292,22 @@
         btnDisconnect.addEventListener('click', () => {
              addLog("Closing connection manually...");
              if (ws) ws.close();
+        });
+
+        btnDemo.addEventListener('click', () => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                const payload = JSON.stringify({ cmd: "demo" });
+                ws.send(payload);
+                addLog(`SENT: ${payload}`);
+            }
+        });
+
+        btnStop.addEventListener('click', () => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                const payload = JSON.stringify({ cmd: "stop" });
+                ws.send(payload);
+                addLog(`SENT: ${payload}`);
+            }
         });
 
     </script>
